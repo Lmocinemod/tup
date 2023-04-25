@@ -3870,6 +3870,19 @@ static char *tup_printf(struct tupfile *tf, const char *cmd, int cmd_len,
 				estring_append(&e, nle->path, nle->len);
 				first = 0;
 			}
+		} else if(*next == 'F') {
+			int first = 1;
+			if(nl->num_entries == 0) {
+				fprintf(tf->f, "tup error: %%F used in rule pattern and no input files were specified.\n");
+				return NULL;
+			}
+			TAILQ_FOREACH(nle, &nl->entries, list) {
+				if(!first) {
+					estring_append(&e, " ", 1);
+				}
+				estring_append(&e, nle->path, nle->len - (extlen + 1));
+				first = 0;
+			}
 		} else if(*next == 'b') {
 			int first = 1;
 			if(nl->num_entries == 0) {
@@ -3965,6 +3978,21 @@ static char *tup_printf(struct tupfile *tf, const char *cmd, int cmd_len,
 					}
 					estring_append(&e, next, 1);
 					estring_append_escape(&e, nle->path, nle->len, *next);
+					estring_append(&e, next, 1);
+					first = 0;
+				}
+			} else if(*p == 'F') {
+				int first = 1;
+				if(nl->num_entries == 0) {
+					fprintf(tf->f, "tup error: %%%cF used in rule pattern and no input files were specified.\n", *next);
+					return NULL;
+				}
+				TAILQ_FOREACH(nle, &nl->entries, list) {
+					if(!first) {
+						estring_append(&e, " ", 1);
+					}
+					estring_append(&e, next, 1);
+					estring_append_escape(&e, nle->path, nle->len - (extlen + 1), *next);
 					estring_append(&e, next, 1);
 					first = 0;
 				}
